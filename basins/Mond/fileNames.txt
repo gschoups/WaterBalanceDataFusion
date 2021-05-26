@@ -1,0 +1,7 @@
+PObs1	gpm.txt
+PObs2	chirps.txt
+PStd	gpmErrorC.txt
+EObs1	ssebop.txt
+EObs2	gleam.txt
+SObs	graceJPL.txt
+QObs	runoff.txt
