@@ -2,7 +2,7 @@
  This repository provides a tool for 
  * estimating errors (bias and noise) in ground/satellite-based hydrological observations of the terrestrial water balance (precipitation, evaporation, total water storage, and river discharge)
  without the need for any ground-truth;
- * bias-correcting and noise-filtering the original observations to create a hydrologically consistent dataset of `cleaned` observations that close the water balance.
+ * bias-correcting and noise-filtering the original observations to create a hydrologically consistent dataset of "cleaned" observations that close the water balance.
 
  The resulting datasets include uncertainty estimates and can for example be used for (spatially lumped) calibration and evaluation of hydrological models using evaporation and total 
  water storage observations, in addition to river discharge data. 
