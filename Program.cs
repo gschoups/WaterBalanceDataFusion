@@ -6,14 +6,14 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 
-namespace BasinWaterBalance
+namespace WaterBalanceDataFusion
 {
     class Program
     {
         static void Main(string[] args)
         {
             // Uncomment this line to regenerate the EP inference code (only necessary if changes are made to the model)
-            //BasinWaterBalance_EP.GenerateCode();
+            //WaterBalanceDataFusion_EP.GenerateCode();
 
             // Specify basin folder containing data files
             if (args.Length == 0) throw new ArgumentException("Missing basin data folder: dotnet run <basinFolder>");
@@ -78,7 +78,7 @@ namespace BasinWaterBalance
             }
 
             // Posteriors
-            var wb = new BasinWaterBalance_EP
+            var wb = new WaterBalanceDataFusion_EP
             {
                 Nt = PObs[0].Length,
                 PObs1 = PObs[0],

@@ -7,13 +7,13 @@ using Microsoft.ML.Probabilistic.Distributions;
 using Microsoft.ML.Probabilistic.Math;
 using Microsoft.ML.Probabilistic.Models;
 
-namespace BasinWaterBalance
+namespace WaterBalanceDataFusion
 {
     using GaussianArrayEstimator = ArrayEstimator<GaussianEstimator, DistributionStructArray<Gaussian, double>, Gaussian>;
     using Range = Microsoft.ML.Probabilistic.Models.Range;
 
     [Serializable]
-    public partial class BasinWaterBalance_EP : IGeneratedAlgorithm
+    public partial class WaterBalanceDataFusion_EP : IGeneratedAlgorithm
     {
         public int NumberOfIterationsEP { get; set; } = 3;
         public int NumberOfIterationsPerParameterMCMC { get; set; } = 2000;
@@ -39,12 +39,12 @@ namespace BasinWaterBalance
         /// </summary>
         /// <param name="modelFile">The file.</param>
         /// <returns>The model.</returns>
-        public static BasinWaterBalance_EP Load(string modelFile)
+        public static WaterBalanceDataFusion_EP Load(string modelFile)
         {
             var serializer = new System.Runtime.Serialization.Formatters.Binary.BinaryFormatter();
             using (var stream = new FileStream(modelFile, FileMode.Open))
             {
-                return (BasinWaterBalance_EP)serializer.Deserialize(stream);
+                return (WaterBalanceDataFusion_EP)serializer.Deserialize(stream);
             }
         }
 
@@ -263,8 +263,8 @@ namespace BasinWaterBalance
             // Generate inference code
             var engine = new InferenceEngine();
             engine.OptimiseForVariables = new IVariable[] { P, E, Q, S, S0, evidence, wE, fE, rE, A, Delta, SStd, aQ, bQ, wP, rP };
-            engine.ModelName = "BasinWaterBalance";
-            engine.ModelNamespace = "BasinWaterBalance";
+            engine.ModelName = "WaterBalanceDataFusion";
+            engine.ModelNamespace = "WaterBalanceDataFusion";
             engine.Compiler.GeneratedSourceFolder = "../../../";
             engine.Compiler.WriteSourceFiles = true;
             engine.Compiler.UseSerialSchedules = true;
