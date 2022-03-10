@@ -5,6 +5,8 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Globalization;
+using System.Threading;
 
 namespace WaterBalanceDataFusion
 {
@@ -12,6 +14,9 @@ namespace WaterBalanceDataFusion
     {
         static void Main(string[] args)
         {
+            // Enforce dot as decimal separator
+            Thread.CurrentThread.CurrentCulture = CultureInfo.InvariantCulture;
+
             // Uncomment this line to regenerate the EP inference code (only necessary if changes are made to the model)
             //WaterBalanceDataFusion_EP.GenerateCode();
 
