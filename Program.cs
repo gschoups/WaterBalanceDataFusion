@@ -21,7 +21,7 @@ class Program
         //WaterBalanceDataFusion_EP.GenerateCode();
 
         // Specify basin folder containing data files
-        //args = ["../../../basins/Mond"];
+        args = ["../../../basins/Hindon"];
         if (args.Length == 0) throw new ArgumentException("Missing basin data folder: dotnet run <basinFolder>");
         string basinFolder = Path.EndsInDirectorySeparator(args[0]) ? args[0] : $"{args[0]}{Path.DirectorySeparatorChar}";
 
@@ -32,7 +32,7 @@ class Program
     private static void InferWaterBalance(string basinFolder)
     {
         // Data - missing observations should be stored as double.NaN
-        LoadData(basinFolder, out double[][] PObs, out double[] PStd, out double[][] EObs, out double[] QObs, out double[][] SObs);
+        LoadData(basinFolder, out double[][] PObs, out double[] PStd, out double[][] EObs, out double[] QObs, out double[][] SObs, out double[] IObs);
 
         // Estimate monthly QObs distributions
         var qEst = Util.ArrayInit(12, m => new MeanVarianceAccumulator());
@@ -73,7 +73,8 @@ class Program
             LognormalFromModeAndCV(0.1, 0.01),//aQ, for tight prior use cv=0.01, for vague prior use cv=0.9
             LognormalFromModeAndCV(0.001, 0.01),//bQ
             FlatLogitnormal(),//wP
-            FlatLogitnormal() //rP
+            FlatLogitnormal(), //rP
+            LognormalFromModeAndCV(0.2, 0.01)//aI, aI=0.2 means 20% error on water imports, e.g.
         };
         var priorMean = Vector.Zero(parPrior.Length);
         var priorVariance = new PositiveDefiniteMatrix(parPrior.Length, parPrior.Length);
@@ -93,6 +94,7 @@ class Program
             EObs1 = EObs[0],
             EObs2 = EObs[1],
             QObs = QObs,
+            IObs = IObs,
             QObsVar = QObsVar,
             SObs = SObs[0],
             S0Prior = Gaussian.FromMeanAndVariance(0, 200 * 200),
@@ -105,9 +107,11 @@ class Program
         WriteResult($"{basinFolder}resultsP.out", wb.PMarginal());
         WriteResult($"{basinFolder}resultsE.out", wb.EMarginal());
         WriteResult($"{basinFolder}resultsQ.out", wb.QMarginal());
+        WriteResult($"{basinFolder}resultsI.out", wb.IMarginal());
         WriteResult($"{basinFolder}resultsS.out", wb.SMarginal());
         WriteResult($"{basinFolder}resultsPar.out", new object[] { wb.wE_marginal_F, wb.fE_marginal_F, wb.rE_marginal_F, wb.A_marginal_F, wb.Delta_marginal_F,
-                                                                   wb.SStd_marginal_F, wb.aQ_marginal_F, wb.bQ_marginal_F, wb.wP_marginal_F, wb.rP_marginal_F });
+                                                                   wb.SStd_marginal_F, wb.aQ_marginal_F, wb.bQ_marginal_F, wb.wP_marginal_F, wb.rP_marginal_F,
+                                                                   wb.aI_marginal_F });
     }
 
     private static void WriteResult<T>(string fileName, IEnumerable<T> items)
@@ -116,7 +120,7 @@ class Program
         foreach (var item in items) file.WriteLine(item.ToString());
     }
 
-    private static void LoadData(string basinFolder, out double[][] P, out double[] PStd, out double[][] E, out double[] Q, out double[][] S)
+    private static void LoadData(string basinFolder, out double[][] P, out double[] PStd, out double[][] E, out double[] Q, out double[][] S, out double[] I)
     {
         // Read fileNames.txt to get names of the data files
         var fileNames = new Dictionary<string, string>();
@@ -132,6 +136,7 @@ class Program
         }
 
         // Read data files
+        I = File.ReadAllLines($"{basinFolder}{fileNames["IObs"]}").Select(double.Parse).ToArray();//mm/month
         Q = File.ReadAllLines($"{basinFolder}{fileNames["QObs"]}").Select(double.Parse).ToArray();//mm/month
         P = new double[2][];
         P[0] = File.ReadAllLines($"{basinFolder}{fileNames["PObs1"]}").Select(double.Parse).ToArray();//mm/month

@@ -69,10 +69,12 @@ public partial class WaterBalanceDataFusion_EP : IGeneratedAlgorithm
         var estbQ = new GammaEstimator();
         var estwP = new BetaEstimator();
         var estrP = new BetaEstimator();
+        var estaI = new GammaEstimator();
 
         var estP = new GaussianArrayEstimator(Nt, i => new GaussianEstimator());
         var estE = new GaussianArrayEstimator(Nt, i => new GaussianEstimator());
         var estQ = new GaussianArrayEstimator(Nt, i => new GaussianEstimator());
+        var estI = new GaussianArrayEstimator(Nt, i => new GaussianEstimator());
         var estS = new GaussianArrayEstimator(Nt, i => new GaussianEstimator());
         var estS0 = new GaussianEstimator();
 
@@ -96,10 +98,12 @@ public partial class WaterBalanceDataFusion_EP : IGeneratedAlgorithm
             estbQ.Add(bQ_marginal_F);
             estwP.Add(wP_marginal_F);
             estrP.Add(rP_marginal_F);
+            estaI.Add(aI_marginal_F);
 
             estP.Add(P_marginal_F);
             estE.Add(E_marginal_F);
             estQ.Add(Q_marginal_F);
+            estI.Add(I_marginal_F);
             estS.Add(S_marginal_F);
             estS0.Add(S0_marginal_F);
         }
@@ -132,18 +136,18 @@ public partial class WaterBalanceDataFusion_EP : IGeneratedAlgorithm
         // Dummy input values
         int ntValue = 1;
         var value = new double[ntValue];
-        var parPriorValue = new VectorGaussian(Vector.Zero(10), PositiveDefiniteMatrix.Identity(10));
+        var parPriorValue = new VectorGaussian(Vector.Zero(11), PositiveDefiniteMatrix.Identity(11));
         var s0PriorValue = new Gaussian(0, 1);
 
         // Define variables
         Variable<bool> evidence = Variable.Bernoulli(0.5).Named("evidence");
         Variable<int> nt = Variable.Observed(ntValue).Named("Nt");
-        Range timeInterval = new Range(nt);
+        Range timeInterval = new(nt);
         Variable<VectorGaussian> parPrior;
         Variable<Gaussian> S0Prior;
-        VariableArray<double> PObs1, PObs2, PStd, EObs1, EObs2, QObs, QObsVar, SObs;
-        VariableArray<double> P, E, Q, S;
-        Variable<double> S0, wE, fE, rE, A, Delta, SStd, aQ, bQ, wP, rP;
+        VariableArray<double> PObs1, PObs2, PStd, EObs1, EObs2, QObs, QObsVar, IObs, SObs;
+        VariableArray<double> P, E, Q, I, S;
+        Variable<double> S0, wE, fE, rE, A, Delta, SStd, aQ, bQ, wP, rP, aI;
         Variable<Vector> par;
 
         // Define model
@@ -162,6 +166,7 @@ public partial class WaterBalanceDataFusion_EP : IGeneratedAlgorithm
             bQ = Variable.Exp(Variable.GetItem(par, 7)).Named("bQ");
             wP = Variable.Logistic(Variable.GetItem(par, 8)).Named("wP");
             rP = Variable.Logistic(Variable.GetItem(par, 9)).Named("rP");
+            aI = Variable.Exp(Variable.GetItem(par, 10)).Named("aI");
 
             // Observations
             PObs1 = Variable.Observed(value, timeInterval).Named("PObs1");
@@ -171,6 +176,7 @@ public partial class WaterBalanceDataFusion_EP : IGeneratedAlgorithm
             EObs2 = Variable.Observed(value, timeInterval).Named("EObs2");
             QObs = Variable.Observed(value, timeInterval).Named("QObs");
             QObsVar = Variable.Observed(value, timeInterval).Named("QObsVar");
+            IObs = Variable.Observed(value, timeInterval).Named("IObs");
             SObs = Variable.Observed(value, timeInterval).Named("SObs");
             S0Prior = Variable.Observed(s0PriorValue).Named("S0Prior");
 
@@ -178,6 +184,7 @@ public partial class WaterBalanceDataFusion_EP : IGeneratedAlgorithm
             P = Variable.Array<double>(timeInterval).Named("P");
             E = Variable.Array<double>(timeInterval).Named("E");
             Q = Variable.Array<double>(timeInterval).Named("Q");
+            I = Variable.Array<double>(timeInterval).Named("I");
             S = Variable.Array<double>(timeInterval).Named("S");
             S0 = Variable.Random<double, Gaussian>(S0Prior).Named("S0");
 
@@ -204,14 +211,19 @@ public partial class WaterBalanceDataFusion_EP : IGeneratedAlgorithm
                 Q[t] = Variable.GaussianFromMeanAndVariance(mQ, sQ * sQ);
                 Variable.ConstrainPositive(Q[t]);
 
+                // I (water imports)
+                var sI = aI * IObs[t];
+                I[t] = Variable.GaussianFromMeanAndVariance(IObs[t], sI * sI);
+                Variable.ConstrainPositive(I[t]);
+
                 // S: water balance
                 using (Variable.If(t == 0))
                 {
-                    S[t] = S0 + P[t] - E[t] - Q[t];
+                    S[t] = S0 + P[t] - E[t] - Q[t] + I[t];
                 }
                 using (Variable.If(t > 0))
                 {
-                    S[t] = S[t - 1] + P[t] - E[t] - Q[t];
+                    S[t] = S[t - 1] + P[t] - E[t] - Q[t] + I[t];
                 }
 
                 // SObs
@@ -231,7 +243,7 @@ public partial class WaterBalanceDataFusion_EP : IGeneratedAlgorithm
 
         // Generate inference code
         var engine = new InferenceEngine();
-        engine.OptimiseForVariables = new IVariable[] { P, E, Q, S, S0, evidence, wE, fE, rE, A, Delta, SStd, aQ, bQ, wP, rP };
+        engine.OptimiseForVariables = [P, E, Q, I, S, S0, evidence, wE, fE, rE, A, Delta, SStd, aQ, bQ, wP, rP, aI];
         engine.ModelName = "WaterBalanceDataFusion";
         engine.ModelNamespace = "WaterBalanceDataFusion";
         engine.Compiler.GeneratedSourceFolder = "../../../";
