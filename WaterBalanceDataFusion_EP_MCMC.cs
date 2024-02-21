@@ -120,10 +120,12 @@ public partial class WaterBalanceDataFusion_EP : IGeneratedAlgorithm
         bQ_marginal_F = estbQ.GetDistribution(bQ_marginal_F);
         wP_marginal_F = estwP.GetDistribution(wP_marginal_F);
         rP_marginal_F = estrP.GetDistribution(rP_marginal_F);
+        aI_marginal_F = estaI.GetDistribution(aI_marginal_F);
 
         P_marginal_F = estP.GetDistribution(P_marginal_F);
         E_marginal_F = estE.GetDistribution(E_marginal_F);
         Q_marginal_F = estQ.GetDistribution(Q_marginal_F);
+        I_marginal_F = estI.GetDistribution(I_marginal_F);
         S_marginal_F = estS.GetDistribution(S_marginal_F);
         S0_marginal_F = estS0.GetDistribution(S0_marginal_F);
     }

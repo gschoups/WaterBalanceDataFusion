@@ -21,7 +21,7 @@ class Program
         //WaterBalanceDataFusion_EP.GenerateCode();
 
         // Specify basin folder containing data files
-        args = ["../../../basins/Hindon"];
+        //args = ["../../../basins/Mond"];
         if (args.Length == 0) throw new ArgumentException("Missing basin data folder: dotnet run <basinFolder>");
         string basinFolder = Path.EndsInDirectorySeparator(args[0]) ? args[0] : $"{args[0]}{Path.DirectorySeparatorChar}";
 
@@ -158,6 +158,7 @@ class Program
             if (E[0][t] < 0) E[0][t] = double.NaN;
             if (E[1][t] < 0) E[1][t] = double.NaN;
             if (S[0][t] == -99999) S[0][t] = double.NaN;
+            if (I[t] == 0) I[t] = 1e-6;
         }
     }
 }
